@@ -1,26 +1,31 @@
 contract HomeInsurance{
 
-    uint THRESHOLD = 5;
+    uint VOTING_THRESHOLD = 3;
     uint OPEN_MINUTES = 5;
     uint PAYOUT = 1;
     uint costToJoinInEther = 1;
     mapping (address => bool) members;
     uint total_amount;
     Claim current_claim;
+    Claim c;
+
 
     struct member{
         address member_address;
     }
 
-    struct Vote{
-        bool approved;
-        address voter;
-    }
+    // struct Vote{
+    //     bool approved;
+    //     address voter;
+    // }
 
     struct Claim{
         address claimant;
         string description;
-        Vote[] votes;
+        mapping (address => bool) voters;
+        uint yesVotes;
+        uint noVotes;
+        uint totalVotes;
         bool processed;
     }
 
@@ -42,6 +47,11 @@ contract HomeInsurance{
             total_amount += msg_value;
         }
     }
+    function getClaim() constant returns(string){
+        return current_claim.description;
+
+    }
+
 
     function isMember(address input) constant returns(bool){
         if(members[input] == true){
@@ -65,33 +75,47 @@ contract HomeInsurance{
         if(members[msg_sender]  != true){
             return;
         }else {
-            Claim c;
             c.claimant = msg_sender;
             c.description = desc;
             c.processed = false;
             current_claim = c;
         }
     }
+    function resolveVotesAndPayout(){
+       if(current_claim.totalVotes >= VOTING_THRESHOLD  && current_claim.yesVotes >= current_claim.noVotes) {
+            current_claim.claimant.send(PAYOUT);
+        }
+
+
+    }
+
 
     function castVote (bool approve){
         address msg_sender = msg.sender;
+        if(current_claim.claimant == msg_sender) {
+            return;
+        }
+        if(current_claim.voters[msg_sender] == true) {
+            return;
+        }
+        current_claim.voters[msg_sender] = true;
         if(members[msg_sender] == true){
-            Vote v;
-            v.approved = approve;
-            v.voter = msg_sender;
-            current_claim.votes.push(v);
+            if(approve == true) {
+                current_claim.yesVotes +=1;
+            }else{
+                current_claim.noVotes +=1;
+            }
+            current_claim.totalVotes +=1;
         } else{
             return;
         }
+        resolveVotesAndPayout();
+
     }
 
     function yesCount () constant returns (uint){
         uint count = 0;
-        for(uint i = 0;i < current_claim.votes.length; i++) {
-            if(current_claim.votes[i].approved == true){
-                count++;
-            }
-        }
-        return count;
+        return current_claim.yesVotes;
     }
+
 }
