@@ -1,0 +1,30 @@
+<html>
+
+<head>
+	<script type="text/javascript" src="web3.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="styles.css" />
+</head>
+
+<body>
+
+	<button onclick="new_home_insurance_contract()">
+		deploy contract
+	</button>
+
+	<form>
+	  Contract Address<br>
+	  <input id='contract_address' type="text" name="firstname">
+	</form>
+
+	<button id='get_balance_of_contract' onclick="click_balance_button()">
+		get balance of contract
+	</button>
+
+	<div id='contract_balance'>
+
+	</div>
+
+	<script type="text/javascript" src="./app.js"></script>
+</body>
+
+</html>
